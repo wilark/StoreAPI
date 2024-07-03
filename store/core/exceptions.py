@@ -5,6 +5,8 @@ class BaseException(Exception):
         if message:
             self.message = message
 
-
 class NotFoundException(BaseException):
     message = "Not Found"
+
+class InsertException(BaseException):
+    message = "Insert Error"
