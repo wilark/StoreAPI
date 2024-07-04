@@ -1,21 +1,14 @@
-def product_data():
+from datetime import datetime
+from decimal import Decimal
+from uuid import UUID, uuid4
+
+def product_data(name: str = "iPhone 14 Pro Max"):
     return {
-        "name": "Iphone 14 Pro Max",
+        "id": uuid4(),
+        "name": name,
         "quantity": 10,
-        "price": "8.500",
+        "price": Decimal("7500.00"),
         "status": True,
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow()
     }
-
-
-def products_data():
-    return [
-        {"name": "Iphone 11 Pro Max", "quantity": 20, "price": "4.500", "status": True},
-        {"name": "Iphone 12 Pro Max", "quantity": 15, "price": "5.500", "status": True},
-        {"name": "Iphone 13 Pro Max", "quantity": 5, "price": "6.500", "status": True},
-        {
-            "name": "Iphone 15 Pro Max",
-            "quantity": 3,
-            "price": "10.500",
-            "status": False,
-        },
-    ]
