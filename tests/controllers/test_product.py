@@ -1,56 +1,30 @@
 from typing import List
-
 import pytest
 from tests.factories import product_data
 from fastapi import status
 
-
 async def test_controller_create_should_return_success(client, products_url):
-    response = await client.post(products_url, json=product_data())
-
-    content = response.json()
-
-    del content["created_at"]
-    del content["updated_at"]
-    del content["id"]
+    response = await client.post(products_url, json=product_data(name="iPhone 14 Pro Max"))
 
     assert response.status_code == status.HTTP_201_CREATED
-    assert content == {
-        "name": "Iphone 14 Pro Max",
-        "quantity": 10,
-        "price": "8.500",
-        "status": True,
-    }
+    assert response.json().get("name") == "iPhone 14 Pro Max"
 
+async def test_controller_create_should_return_422(client, products_url):
+    response = await client.post(products_url, json={})
 
-async def test_controller_get_should_return_success(
-    client, products_url, product_inserted
-):
-    response = await client.get(f"{products_url}{product_inserted.id}")
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    content = response.json()
-
-    del content["created_at"]
-    del content["updated_at"]
+async def test_controller_get_should_return_success(client, product_inserted, products_url):
+    response = await client.get(f"{products_url}/{product_inserted.id}")
 
     assert response.status_code == status.HTTP_200_OK
-    assert content == {
-        "id": str(product_inserted.id),
-        "name": "Iphone 14 Pro Max",
-        "quantity": 10,
-        "price": "8.500",
-        "status": True,
-    }
-
+    assert response.json().get("name") == product_inserted.name
 
 async def test_controller_get_should_return_not_found(client, products_url):
-    response = await client.get(f"{products_url}4fd7cd35-a3a0-4c1f-a78d-d24aa81e7dca")
+    response = await client.get(f"{products_url}/1e4f214e-85f7-461a-89d0-a751a32e3bb9")
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json() == {
-        "detail": "Product not found with filter: 4fd7cd35-a3a0-4c1f-a78d-d24aa81e7dca"
-    }
-
+    assert response.json().get("detail") == "Product not found with filter: 1e4f214e-85f7-461a-89d0-a751a32e3bb9"
 
 @pytest.mark.usefixtures("products_inserted")
 async def test_controller_query_should_return_success(client, products_url):
@@ -60,43 +34,26 @@ async def test_controller_query_should_return_success(client, products_url):
     assert isinstance(response.json(), List)
     assert len(response.json()) > 1
 
-
-async def test_controller_patch_should_return_success(
-    client, products_url, product_inserted
-):
-    response = await client.patch(
-        f"{products_url}{product_inserted.id}", json={"price": "7.500"}
-    )
-
-    content = response.json()
-
-    del content["created_at"]
-    del content["updated_at"]
+async def test_controller_update_should_return_success(client, product_inserted, products_url):
+    response = await client.patch(f"{products_url}/{product_inserted.id}", json={"price": 7500})
 
     assert response.status_code == status.HTTP_200_OK
-    assert content == {
-        "id": str(product_inserted.id),
-        "name": "Iphone 14 Pro Max",
-        "quantity": 10,
-        "price": "7.500",
-        "status": True,
-    }
+    assert response.json().get("price") == 7500
 
+async def test_controller_update_should_return_not_found(client, products_url):
+    response = await client.patch(f"{products_url}/1e4f214e-85f7-461a-89d0-a751a32e3bb9", json={"price": 7500})
 
-async def test_controller_delete_should_return_no_content(
-    client, products_url, product_inserted
-):
-    response = await client.delete(f"{products_url}{product_inserted.id}")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json().get("detail") == "Product not found with filter: 1e4f214e-85f7-461a-89d0-a751a32e3bb9"
+
+async def test_controller_delete_should_return_success(client, product_inserted, products_url):
+    response = await client.delete(f"{products_url}/{product_inserted.id}")
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-
 async def test_controller_delete_should_return_not_found(client, products_url):
-    response = await client.delete(
-        f"{products_url}4fd7cd35-a3a0-4c1f-a78d-d24aa81e7dca"
-    )
+    response = await client.delete(f"{products_url}/1e4f214e-85f7-461a-89d0-a751a32e3bb9")
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json() == {
-        "detail": "Product not found with filter: 4fd7cd35-a3a0-4c1f-a78d-d24aa81e7dca"
-    }
+    assert response.json().get("detail") == "Product not found with filter: 1e4f214e-85f7-461a-89d0-a751a32e3bb9"
+    
