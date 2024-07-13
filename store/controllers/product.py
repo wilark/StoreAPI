@@ -1,3 +1,4 @@
+import datetime
 from typing import List
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
 from pydantic import UUID4
@@ -40,7 +41,12 @@ async def patch(
     body: ProductUpdate = Body(...),
     usecase: ProductUsecase = Depends(),
 ) -> ProductUpdateOut:
-    return await usecase.update(id=id, body=body)
+    try:
+        if hasattr(body, "updated_at") and body.updated_at is not None:
+            body.updated_at = datetime.utcnow()
+        return await usecase.update(id=id, body=body)
+    except NotFoundException:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Produto não encontrado")
 
 
 @router.delete(path="/{id}", status_code=status.HTTP_204_NO_CONTENT)
